@@ -1,0 +1,44 @@
+%% Master Resume Skill — Generic CV Template
+%% Based on YAAC: Another Awesome CV
+%% https://github.com/darwiin/yaac-another-awesome-cv
+%%
+%% Compile with:  xelatex cv.tex
+%% Requires: yaac-another-awesome-cv.cls (in same directory)
+%% Fonts: Source Sans Pro (in fonts/ subdirectory)
+
+\documentclass[localFont,alternative]{yaac-another-awesome-cv}
+
+%% ── PERSON INFO ──────────────────────────────────────────────────
+\name{First}{Last}
+\tagline{Target Role | Value Proposition | Key Differentiator}
+\photo{2.5cm}{photo}   %% Remove this line if no photo
+
+\socialinfo{
+  \email{email@example.com}
+  \linkedin{linkedin.com/in/username}
+  \github{github.com/username}
+  %% \smartphone{+1 234 567 890}
+  %% \address{City, Country}
+}
+
+%% ─────────────────────────────────────────────────────────────────
+
+\begin{document}
+
+\makecvheader
+
+%% ── ABOUT / SUMMARY ──────────────────────────────────────────────
+\input{section_headline}
+
+%% ── EXPERIENCE ───────────────────────────────────────────────────
+\sectionTitle{Experience}{\faBriefcase}
+\input{section_experience}
+
+%% ── SKILLS ───────────────────────────────────────────────────────
+\sectionTitle{Skills}{\faCode}
+\input{section_competences}
+
+%% ── EDUCATION + LANGUAGES ────────────────────────────────────────
+\input{section_langues}
+
+\end{document}

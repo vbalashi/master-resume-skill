@@ -1,0 +1,15 @@
+node_modules/
+
+# All personal data is local-only
+people/*/master-profile.yaml
+people/*/audit-log.yaml
+people/*/RECOMMENDATIONS.md
+people/*/source-docs/
+people/*/output/
+people/*/latex/cv.tex
+people/*/latex/section_*.tex
+people/*/latex/cv.pdf
+people/*/linkedin/
+
+# Keep the people/ directory itself
+!people/.gitkeep
