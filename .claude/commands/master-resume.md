@@ -462,15 +462,6 @@ xelatex cv.tex
 
 Full build instructions and troubleshooting: `REPO_ROOT/latex/BUILD.md`.
 
-### Step 4.4b — Generate DOCX (optional)
-
-If the user also wants a .docx version, prepare a JSON object and pipe it to the generator:
-
-```bash
-echo '<json>' | node REPO_ROOT/tools/generate_cv.js
-```
-
-JSON structure — see the header comment in `tools/generate_cv.js` for the full spec. Set `outputPath` to `PERSON_DIR/output/CV-Name-YYYY-MM.docx`.
 
 ### Step 4.5 — Write LinkedIn text
 

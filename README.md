@@ -4,7 +4,7 @@ A Claude Code skill that turns your existing CVs into a structured master profil
 
 ## TL;DR
 
-1. Clone this repo and run `npm install`
+1. Clone this repo
 2. Put your CV files (docx/pdf/txt) into `people/your-name/source-docs/`
 3. Open in Claude Code and type `/master-resume your-name`
 
@@ -28,9 +28,8 @@ Claude will extract your experience, interview you about each item, then generat
 **Required:**
 - [Claude Code](https://claude.ai/claude-code) (Claude's AI coding agent CLI)
 - `markitdown` — parses your CV files: `pip install markitdown`
-- `node` + `npm` — for generating .docx: `npm install` in repo root
 
-**For PDF compilation (optional):**
+**For PDF compilation:**
 - TeX Live (Linux/Mac): `sudo apt install texlive-full` or `brew install --cask mactex`
 - See [latex/BUILD.md](latex/BUILD.md) for detailed build instructions
 
@@ -69,12 +68,6 @@ Any format works: `.docx`, `.pdf`, `.txt`. More versions = better extraction.
 - Performance reviews (redacted)
 - Notes about what you want next
 - Any coaching or mentoring notes you have
-
-### 3. Install dependencies
-
-```bash
-npm install
-```
 
 ---
 
@@ -180,9 +173,6 @@ master-resume-skill/
 │   ├── template.tex           ← Generic CV template
 │   ├── yaac-another-awesome-cv.cls  ← CV document class
 │   └── fonts/                 ← Source Sans Pro fonts
-├── tools/
-│   └── generate_cv.js         ← .docx generator script
-├── package.json
 └── people/                    ← Your data (gitignored)
     └── your-name/
         ├── master-profile.yaml

@@ -1,5 +1,3 @@
-node_modules/
-
 # All personal data is local-only — nothing under people/*/ is tracked
 people/*/master-profile.yaml
 people/*/audit-log.yaml
