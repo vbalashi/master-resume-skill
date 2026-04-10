@@ -16,12 +16,9 @@ This skill lives in the same repo it was cloned from. All data is stored locally
 
 ---
 
-## REPO ROOT DETECTION
+## REPO ROOT
 
-The skill repo root is the directory containing `.claude/commands/master-resume.md`.
-Use Glob or Read to find the repo root by locating this file, then set `REPO_ROOT` accordingly.
-
-All paths in this skill are relative to `REPO_ROOT`.
+`REPO_ROOT` is the current working directory (where Claude Code is running). All paths in this skill are relative to it.
 
 ---
 
@@ -296,6 +293,20 @@ Update master-profile.yaml immediately — do not batch. This prevents data loss
 - **"show [id]"** — display a specific unit's state
 - **"stop"** — end audit session, save, ask if user wants to generate outputs now
 
+### Positioning profiles (after 10+ units audited)
+
+After auditing a substantial batch, offer to create or update positioning profiles:
+
+> "You've reviewed N units. Want to create a positioning profile for a target role?"
+
+1. Ask for target role name (e.g., `senior_ba`, `data_engineer`)
+2. Ask for 2-3 sentence positioning summary
+3. Auto-suggest `highlight` list: all `core` + `supporting` units where `resume_candidate` = yes, sorted by relevance
+4. Auto-suggest `hide` list: `risky`, `peripheral`, or `resume_candidate` = no
+5. Show and let user adjust. Write to `positioning_profiles` in master-profile.yaml.
+
+When a unit is newly audited, check if it should be added/removed from existing profiles.
+
 ### Rothbard trap integration
 
 After completing the audit, if `career_identity.rothbard_trap` was filled in Phase 2:
@@ -347,44 +358,119 @@ Each bullet: strong action verb + WHAT + HOW + RESULT. 1–2 lines max. Quantifi
 
 ### Step 4.4 — Write LaTeX CV
 
-After the user approves the draft, write the LaTeX CV files to `PERSON_DIR/latex/`:
+After the user approves the draft, write the LaTeX CV files to `PERSON_DIR/latex/`.
 
-1. Copy the template class from `REPO_ROOT/latex/yaac-another-awesome-cv.cls` to `PERSON_DIR/latex/`
-2. Copy fonts from `REPO_ROOT/latex/fonts/` to `PERSON_DIR/latex/fonts/`
-3. Write `PERSON_DIR/latex/cv.tex` with the person's data
+**Step A — Copy template assets:**
+```bash
+cp REPO_ROOT/latex/yaac-another-awesome-cv.cls PERSON_DIR/latex/
+cp -r REPO_ROOT/latex/fonts/ PERSON_DIR/latex/fonts/
+```
 
-LaTeX structure (adapt from template in `REPO_ROOT/latex/template.tex`):
+**Step B — Write `cv.tex`** (main file):
 ```latex
 \documentclass[localFont,alternative]{yaac-another-awesome-cv}
 \name{First}{Last}
 \tagline{Target Role | Value Proposition}
 \socialinfo{
+  \smartphone{+31 6XX XXX XX}
   \email{email@example.com}
-  \linkedin{linkedin.com/in/username}
-  \github{github.com/username}
+  \linkedin{username}       % just the slug, macro adds full URL
+  \github{username}          % just the slug
 }
 \begin{document}
 \makecvheader
-% Summary section
-% Experience section
-% Skills section
-% Education + Languages section
+\input{section_headline}
+\sectionTitle{Professional Experience}{\faSuitcase}
+\input{section_experience}
+\input{section_competences}
+\input{section_langues}
 \end{document}
 ```
 
-Write separate section files:
-- `section_headline.tex` — name, tagline, contact info
-- `section_experience.tex` — all experience entries with bullets
-- `section_competences.tex` — skills grouped by category
-- `section_langues.tex` — education + languages
+**Step C — Write `section_headline.tex`** (summary):
+```latex
+{\sectionTitle{Summary}{\faUser}
+\vspace{0.5em}
+2-3 sentence summary text here.
+\vspace{0.5em}
+}
+```
 
-Tell the user how to compile:
+**Step D — Write `section_experience.tex`** using the `\experience` macro:
+```latex
+\begin{experiences}
+  \experience
+    {Present}   {Role Title at Company Name}
+    {Country}{}
+    {Start Date} {
+                  \begin{itemize}
+                    \item Bullet point 1
+                    \item Bullet point 2
+                  \end{itemize}
+                \vspace{0.4em}
+                }
+                {Tech1, Tech2, Tech3}
+
+  \emptySeparator
+
+  \experience
+    {End Date}   {Next Role Title at Company}
+    {Country}{}
+    {Start Date} {
+                  \begin{itemize}
+                    \item ...
+                  \end{itemize}
+                \vspace{0.4em}
+                }
+                {Tech1, Tech2}
+\end{experiences}
+```
+
+**`\experience` takes 7 args:** `{end date}{title}{country}{unused}{start date}{description}{tech tags}`
+
+**Step E — Write `section_competences.tex`** using `\keywordsentry`:
+```latex
+{\sectionTitle{Skills}{\faTasks}
+\vspace{1em}
+\begin{keywords}
+  \keywordsentry{Category Name}{Skill1, Skill2, Skill3}
+  \keywordsentry{Another Category}{Skill4, Skill5}
+\end{keywords}}
+```
+
+**Step F — Write `section_langues.tex`** using `\skill` (dots) and `\scholarshipentry`:
+```latex
+\sectionTitle{Languages}{\faGlobe}
+\begin{skills}
+  \skill{Language}{5}    % 5 = native, 4 = fluent, 3 = professional, 2 = basic, 1 = beginner
+\end{skills}
+
+\sectionTitle{Education}{\faMortarBoard}
+\begin{scholarship}
+  \scholarshipentry{Year}{Institution Name}
+  \scholarshipentry{}{Degree Name}
+\end{scholarship}
+```
+
+**LaTeX escaping:** Characters `& % $ # _ { }` must be escaped as `\& \% \$ \# \_ \{ \}` in all text content. Dashes: use `--` for en-dash.
+
+**Step G — Tell the user how to compile:**
 ```
 cd people/{slug}/latex
 xelatex cv.tex
 ```
 
-Full build instructions are in `REPO_ROOT/latex/BUILD.md`.
+Full build instructions and troubleshooting: `REPO_ROOT/latex/BUILD.md`.
+
+### Step 4.4b — Generate DOCX (optional)
+
+If the user also wants a .docx version, prepare a JSON object and pipe it to the generator:
+
+```bash
+echo '<json>' | node REPO_ROOT/tools/generate_cv.js
+```
+
+JSON structure — see the header comment in `tools/generate_cv.js` for the full spec. Set `outputPath` to `PERSON_DIR/output/CV-Name-YYYY-MM.docx`.
 
 ### Step 4.5 — Write LinkedIn text
 
@@ -412,8 +498,9 @@ Write `PERSON_DIR/linkedin/linkedin-content.md` with:
 
 **Full skills list** — all skills to add, prioritized.
 
-Show the user the full content and get approval. Then say:
-> "To apply this to LinkedIn, open your profile in Chrome and run `/linkedin-optimize` — it will push this content via browser automation."
+Show the user the full content and get approval.
+
+Tell the user: "Your LinkedIn text is saved in `people/{slug}/linkedin/linkedin-content.md`. Copy each section into your LinkedIn profile manually — headline, about, experience descriptions, skills."
 
 ### Step 4.6 — Career recommendations
 

@@ -2,6 +2,14 @@
 
 A Claude Code skill that turns your existing CVs into a structured master profile, a polished LaTeX PDF resume, LinkedIn-ready text, and personalized career recommendations — through a guided conversation.
 
+## TL;DR
+
+1. Clone this repo and run `npm install`
+2. Put your CV files (docx/pdf/txt) into `people/your-name/source-docs/`
+3. Open in Claude Code and type `/master-resume your-name`
+
+Claude will extract your experience, interview you about each item, then generate: a master profile (YAML), a LaTeX PDF CV, LinkedIn-ready text, and career recommendations. The full process takes 1–3 sessions depending on career length.
+
 ---
 
 ## What this produces

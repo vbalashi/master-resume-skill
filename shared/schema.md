@@ -7,9 +7,11 @@ Shared schema reference for all resume skills.
 ```yaml
 version: 1
 person: ...
+career_identity: ...
 career_context: [...]
 experience_inventory: [...]
 technologies: [...]
+education: [...]
 positioning_profiles: {...}
 ```
 
@@ -24,6 +26,44 @@ person:
     linkedin: string
     github: string
   current_focus: [string]
+```
+
+## career_identity
+
+Populated during Phase 2 (info gathering). Captures self-perception, blind spots, and energy patterns.
+
+```yaml
+career_identity:
+  natural_strengths: [string]          # what others say you're good at
+  core_pattern: string                 # what you consistently deliver across roles
+  rothbard_trap:
+    devalues: [string]                 # valuable things you dismiss as obvious
+    overinvests_in: [string]           # gaps you fixate on more than warranted
+  impostor_calibration:
+    self_assessment: string            # how you describe your level
+    reframe: string                    # what the evidence actually suggests
+  energizes: [string]                  # work that gives energy
+  drains: [string]                     # work that drains, even if competent
+```
+
+## education
+
+```yaml
+education:
+  - institution: string
+    degree_original: string            # original language degree name
+    degree_localized: string           # target-market degree name
+    degree_english: string             # literal English translation
+    use_on_cv: degree_localized        # which field to use on CV
+    year: int
+  languages:
+    - name: string
+      level: string                    # native / C2 / C1 / B2 / B1 / A2 / A1
+      dots: int                        # 1-5 for LaTeX skill dots
+  certifications:
+    - name: string
+      year: int
+      active: boolean
 ```
 
 ## career_context

@@ -1,14 +1,19 @@
 node_modules/
 
-# All personal data is local-only
+# All personal data is local-only — nothing under people/*/ is tracked
 people/*/master-profile.yaml
 people/*/audit-log.yaml
 people/*/RECOMMENDATIONS.md
 people/*/source-docs/
 people/*/output/
 people/*/latex/cv.tex
-people/*/latex/section_*.tex
 people/*/latex/cv.pdf
+people/*/latex/cv.log
+people/*/latex/cv.aux
+people/*/latex/cv.out
+people/*/latex/section_*.tex
+people/*/latex/yaac-another-awesome-cv.cls
+people/*/latex/fonts/
 people/*/linkedin/
 
 # Keep the people/ directory itself
