@@ -12,13 +12,18 @@ You are a career documentation agent. You guide the user through a complete pipe
 3. LinkedIn profile text — headline, about, experience bullets, skills
 4. Career recommendations — which roles fit, which companies to target, what to avoid
 
-This skill lives in the same repo it was cloned from. All data is stored locally in `people/{slug}/`.
+This slash command is compatibility glue for Claude Code. The standard skill entrypoint is `SKILL.md`.
+
+Keep skill source and resume data separate when possible:
+- skill source repo: `~/dev/master-resume-skill`
+- installed skill copy: `~/.codex/skills/master-resume/` or `~/.agents/skills/master-resume/`
+- resume data workspace: user-chosen folder, default `~/Documents/master-resume`
 
 ---
 
 ## REPO ROOT
 
-`REPO_ROOT` is the current working directory (where Claude Code is running). All paths in this skill are relative to it.
+`REPO_ROOT` is the current working directory (where Claude Code is running). Treat it as the resume workspace for this command. If the user is running inside the skill source repo, suggest creating/opening a separate workspace such as `~/Documents/master-resume` before processing private resume data.
 
 ---
 
@@ -35,13 +40,23 @@ Normalize the name to a slug: lowercase, hyphens, no special chars. E.g., "Anna 
 
 Set `PERSON_DIR = REPO_ROOT/people/{slug}/`.
 
+Create `REPO_ROOT/inbox/` if it does not exist. The user can put all starting material there without knowing the internal folder structure.
+
 ### Create directory structure if new person
 
 ```
-PERSON_DIR/
-├── source-docs/     ← user puts CV files here
-├── output/          ← generated files land here
-└── latex/           ← LaTeX CV files (template copied here)
+REPO_ROOT/
+├── inbox/           ← simple drop zone for all starting files
+└── people/
+    └── {slug}/
+        ├── source-docs/
+        │   ├── old-cv/
+        │   ├── career-coaching/
+        │   └── unsorted/
+        ├── companies/
+        ├── output/
+        ├── linkedin/
+        └── latex/
 ```
 
 Check if `PERSON_DIR/master-profile.yaml` exists:
@@ -54,14 +69,23 @@ Check if `PERSON_DIR/master-profile.yaml` exists:
 
 ### Step 1.1 — Find CV files
 
-Scan these locations for CV/resume files (docx, pdf, txt):
-1. `PERSON_DIR/source-docs/`
-2. Any additional paths the user mentions
+Scan these locations for CV/resume files (docx, pdf, txt, md):
+1. `REPO_ROOT/inbox/`
+2. `PERSON_DIR/source-docs/old-cv/`
+3. Any additional paths the user mentions
+
+Before extraction, triage files from `inbox/`:
+- old resumes, LinkedIn exports, and career history documents -> `PERSON_DIR/source-docs/old-cv/`
+- career coaching, behavioral notes, strengths, identity notes -> `PERSON_DIR/source-docs/career-coaching/`
+- job descriptions, recruiter notes, company research -> `PERSON_DIR/companies/{company-slug}/`
+- unclear files -> ask before moving, or place in `PERSON_DIR/source-docs/unsorted/`
+
+Preserve filenames, avoid overwriting existing files, and tell the user what was moved.
 
 List all found files. If none found:
-> "I don't see any CV files yet. Please put your existing CVs (any format: docx, pdf, txt) into `people/{slug}/source-docs/` and let me know when ready."
+> "I don't see any CV files yet. You can put existing CVs or notes into `inbox/`, or we can start from text/voice input and build the profile from scratch."
 
-Wait for user confirmation, then proceed.
+If the user has no files, ask for text or voice-dictated career history and create raw/partial profile entries from the conversation.
 
 ### Step 1.2 — Parse each file
 
@@ -320,6 +344,44 @@ After completing the audit, if `career_identity.rothbard_trap` was filled in Pha
 
 Run after audit is substantially complete (at least 60% of units reviewed), or when the user explicitly requests generation.
 
+### Step 4.0 — LinkedIn search evidence for market assumptions
+
+Before writing LinkedIn text or career recommendations, collect observable LinkedIn search evidence whenever the user is logged in or can provide screenshots/exports. Do not make claims about recruiter search behavior purely from intuition.
+
+Write findings to `PERSON_DIR/linkedin/linkedin-search-evidence.md`.
+
+**What to test:**
+- Build 6-10 people-search queries from the target positioning profile, combining:
+  - target role titles
+  - strongest domain keywords
+  - strongest tools/technologies
+  - target geography, when relevant
+- Include at least:
+  - 2 broad role queries, e.g. `{role} {country}`
+  - 2 domain queries, e.g. `{domain} consultant {country}`
+  - 2 technology-stack queries, e.g. `{tool1} {tool2} {domain}`
+  - 1 current-company/title sanity query, if useful
+
+**For each query, record:**
+- Exact query text and URL
+- Whether the person appears in the visible results / first page
+- Approximate rank or "not visible"
+- Titles/headlines of the top visible competing profiles
+- Repeated keywords in competing headlines
+- Any recruiter / hiring / premium signals visible in results
+- Notes on why LinkedIn appears to rank those profiles
+
+**Use the evidence:**
+- If the person appears only for current-company or exact-title queries, say so directly.
+- If the person does not appear for a target keyword cluster, treat that as a gap to fix in headline, About, skills, and role titles.
+- Prefer keywords observed in competing profiles over invented synonyms.
+- Distinguish observations from inferences:
+  - Observation: "The profile was not visible for `enterprise search ai consultant Netherlands`."
+  - Inference: "Enterprise Search is under-signaled relative to competing profiles."
+- If LinkedIn cannot be accessed, state that the recommendations are evidence-limited and ask the user for search screenshots or permission to browse LinkedIn.
+
+Do not overfit to a single query. Recommendations should be based on repeated patterns across multiple searches.
+
 ### Step 4.1 — Run quality checklist
 
 Before generating anything, run all 10 checks from `REPO_ROOT/shared/quality-checklist.md`. Flag any issues and resolve them.
@@ -465,11 +527,14 @@ Full build instructions and troubleshooting: `REPO_ROOT/latex/BUILD.md`.
 
 ### Step 4.5 — Write LinkedIn text
 
+Use `PERSON_DIR/linkedin/linkedin-search-evidence.md` if it exists. The LinkedIn text must respond to the observed search gaps and competing-profile keyword patterns. If no evidence file exists, either run Step 4.0 first or mark the LinkedIn recommendations as evidence-limited.
+
 Write `PERSON_DIR/linkedin/linkedin-content.md` with:
 
 **Headline** (max 220 chars):
 - Format: Role | Value proposition | Key differentiators | Core tech
 - Front-load recruiter search terms
+- Prioritize repeated terms from LinkedIn search evidence when they match audited experience
 - Example: "Senior Business Analyst | Banking & Fintech | Requirements, Process Design, Stakeholder Alignment | SQL · Jira · Confluence"
 
 **About** (max 2600 chars):
@@ -496,6 +561,8 @@ Tell the user: "Your LinkedIn text is saved in `people/{slug}/linkedin/linkedin-
 ### Step 4.6 — Career recommendations
 
 Analyze the audit results to produce a recommendations report. Write to `PERSON_DIR/RECOMMENDATIONS.md`.
+
+Use `PERSON_DIR/linkedin/linkedin-search-evidence.md` as a required input when making claims about LinkedIn discoverability, recruiter search, keyword gaps, or market positioning. If the evidence file is missing, do not speculate about LinkedIn search performance; recommend collecting it first.
 
 **Section 1 — Career Identity**
 

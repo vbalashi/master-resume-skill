@@ -1,0 +1,3 @@
+display_name: "Master Resume"
+short_description: "Set up, audit, generate, QA, package, and publish honest targeted resumes."
+default_prompt: "Create a master-resume workspace, ask where to put it, collect source resumes or text input, audit experience, and generate a visually checked CV."

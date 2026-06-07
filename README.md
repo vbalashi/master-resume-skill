@@ -1,14 +1,26 @@
 # Master Resume Skill
 
-A Claude Code skill that turns your existing CVs into a structured master profile, a polished LaTeX PDF resume, LinkedIn-ready text, and personalized career recommendations — through a guided conversation.
+A portable agent skill that turns your existing CVs into a structured master profile, a polished LaTeX PDF resume, LinkedIn-ready text, and personalized career recommendations through a guided conversation.
+
+This repository is the **skill source**. It should not be used as the private resume data workspace.
+
+Recommended locations:
+
+| Purpose | Path |
+|---|---|
+| Skill development repo | `~/dev/master-resume-skill` |
+| Private resume data workspace | `~/Documents/master-resume` or another user-chosen folder |
+| Codex/OpenAI local skill entry | `<resume-workspace>/.codex/skills/master-resume` |
+| Claude-style local skill entry | `<resume-workspace>/.agents/skills/master-resume` |
 
 ## TL;DR
 
-1. Clone this repo
-2. Put your CV files (docx/pdf/txt) into `people/your-name/source-docs/`
-3. Open in Claude Code and type `/master-resume your-name`
+1. Clone this repo as the skill source.
+2. Link or install the skill into the resume workspace.
+3. Ask the agent to initialize a resume workspace.
+4. Put all starting files into the workspace `inbox/`.
 
-Claude will extract your experience, interview you about each item, then generate: a master profile (YAML), a LaTeX PDF CV, LinkedIn-ready text, and career recommendations. The full process takes 1–3 sessions depending on career length.
+The agent will create the personal folder structure, extract your experience, interview you about each item, then generate: a master profile (YAML), a LaTeX PDF CV, LinkedIn-ready text, and career recommendations. The full process takes 1–3 sessions depending on career length.
 
 ---
 
@@ -37,31 +49,61 @@ Claude will extract your experience, interview you about each item, then generat
 
 ## Setup
 
-### 1. Clone this repo and open it in Claude Code
+### 1. Clone this source repo
 
 ```bash
 git clone https://github.com/vbalashi/master-resume-skill
 cd master-resume-skill
-code .         # or: cursor . / claude .
 ```
 
-Open the repo in Claude Code (run `claude` in the terminal, or open via your IDE's Claude Code extension).
+### 2. Package the skill
 
-### 2. Add your CV files
-
-Create a folder for yourself and drop in all your existing CVs:
-
-```
-people/
-└── your-name/
-    └── source-docs/
-        ├── CV_2024.docx
-        ├── CV_2022.pdf
-        ├── LinkedIn_export.pdf
-        └── ...
+```bash
+scripts/package_skill.sh
 ```
 
-Any format works: `.docx`, `.pdf`, `.txt`. More versions = better extraction.
+The archive lands in `dist/` and contains a clean `master-resume/` skill folder plus `INSTALL.md`.
+
+### 3. Install the skill locally
+
+For local development, use workspace-local symlinks so edits in this repo are visible immediately only inside the resume workspace:
+
+```bash
+mkdir -p ~/Documents/master-resume/.codex/skills ~/Documents/master-resume/.agents/skills
+ln -sfn ~/dev/master-resume-skill ~/Documents/master-resume/.codex/skills/master-resume
+ln -sfn ~/dev/master-resume-skill ~/Documents/master-resume/.agents/skills/master-resume
+```
+
+For another user's machine, send the archive from `dist/`; they can copy or symlink the packaged `master-resume/` folder into their resume workspace skills directory. Global install is optional, not the default.
+
+Restart the agent after installing.
+
+### 4. Initialize a resume workspace
+
+Ask the agent to initialize a master-resume workspace. It should ask where to create it; the suggested default is `~/Documents/master-resume`.
+
+The workspace starts with a simple inbox:
+
+```text
+master-resume/
+├── inbox/
+└── people/
+```
+
+Drop all starting material into `inbox/`:
+
+```
+inbox/
+├── CV_2024.docx
+├── CV_2022.pdf
+├── LinkedIn_export.pdf
+├── job-description.txt
+└── notes.md
+```
+
+The agent creates `people/{you}/`, classifies the files, and moves/copies them into the right internal folders.
+
+Any format works: `.docx`, `.pdf`, `.txt`, `.md`. More versions = better extraction.
 
 **Also useful to add:**
 - Self-assessment documents
@@ -73,15 +115,16 @@ Any format works: `.docx`, `.pdf`, `.txt`. More versions = better extraction.
 
 ## How to start
 
-In Claude Code, type:
+In Codex/Claude, start conversationally:
 
 ```
-/master-resume your-name
+Initialize my master-resume workspace.
 ```
 
-For example:
+With Claude Code slash command compatibility, you can also type:
+
 ```
-/master-resume anna-smith
+/master-resume
 ```
 
 Or start conversationally:
@@ -162,9 +205,15 @@ Claude produces all four outputs and runs a quality checklist before finalizing.
 
 ```
 master-resume-skill/
+├── SKILL.md                  ← Standard OpenAI/Codex and Claude-style skill entrypoint
+├── agents/
+│   └── openai.yaml           ← Codex UI metadata
+├── scripts/
+│   ├── package_skill.sh      ← Builds a clean transferable archive
+│   └── validate_skill.sh     ← Checks required skill behavior
 ├── .claude/
 │   └── commands/
-│       └── master-resume.md   ← The skill logic
+│       └── master-resume.md   ← Claude Code slash-command compatibility
 ├── shared/
 │   ├── schema.md              ← YAML field definitions
 │   └── quality-checklist.md   ← Pre-output validation checks
@@ -173,15 +222,7 @@ master-resume-skill/
 │   ├── template.tex           ← Generic CV template
 │   ├── yaac-another-awesome-cv.cls  ← CV document class
 │   └── fonts/                 ← Source Sans Pro fonts
-└── people/                    ← Your data (gitignored)
-    └── your-name/
-        ├── master-profile.yaml
-        ├── audit-log.yaml
-        ├── RECOMMENDATIONS.md
-        ├── source-docs/        ← Put your CVs here
-        ├── latex/              ← Generated LaTeX files
-        ├── linkedin/           ← Generated LinkedIn content
-        └── output/             ← Generated PDFs and docx
+└── people/                    ← Kept only as a gitignored local scratch area; real user data belongs in a separate workspace
 ```
 
 ---
